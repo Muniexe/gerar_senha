@@ -87,3 +87,4 @@ tk.Button(root, text="Copiar", command=copiar_senha, bg="#2196F3", fg="white", f
 tk.Label(root, text="Criado com ❤️ em Python", font=("Arial", 9), fg="gray").pack(side="bottom", pady=10)
 
 root.mainloop()
+#quem leu e gay
