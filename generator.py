@@ -1,7 +1,10 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 import string
-import secrets  # mais seguro que random
+import secrets
+from datetime import datetime
+
+ARQUIVO_SENHAS = "senhas.txt"
 
 # === Funções ===
 def gerar_senha():
@@ -35,6 +38,9 @@ def gerar_senha():
     entry_resultado.insert(0, senha)
     entry_resultado.configure(state="readonly")
 
+    salvar_senha(senha)
+    atualizar_historico()
+
 def copiar_senha():
     senha = entry_resultado.get()
     if not senha:
@@ -46,10 +52,33 @@ def copiar_senha():
     lbl_copiado.config(text="✅ Copiado!", fg="#00C853")
     root.after(1500, lambda: lbl_copiado.config(text=""))
 
+def salvar_senha(senha):
+    """Salva a senha em um arquivo local com data e hora."""
+    agora = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+    with open(ARQUIVO_SENHAS, "a", encoding="utf-8") as f:
+        f.write(f"[{agora}] {senha}\n")
+
+def atualizar_historico():
+    """Atualiza a lista de senhas na interface."""
+    listbox_senhas.delete(0, tk.END)
+    try:
+        with open(ARQUIVO_SENHAS, "r", encoding="utf-8") as f:
+            linhas = f.readlines()[-10:]  # mostra as 10 mais recentes
+        for linha in linhas:
+            listbox_senhas.insert(tk.END, linha.strip())
+    except FileNotFoundError:
+        pass
+
+def limpar_historico():
+    """Limpa apenas a lista da interface, não o arquivo."""
+    listbox_senhas.delete(0, tk.END)
+    lbl_copiado.config(text="🗑 Histórico limpo!", fg="#FF6F00")
+    root.after(1500, lambda: lbl_copiado.config(text=""))
+
 # === Interface ===
 root = tk.Tk()
 root.title("🔒 Gerador de Senhas Seguras")
-root.geometry("420x430")
+root.geometry("440x550")
 root.resizable(False, False)
 
 # === Cores ===
@@ -122,10 +151,28 @@ btn_copiar.pack(side="left", pady=6)
 lbl_copiado = tk.Label(frame_copy, text="", bg=COR_FUNDO, fg="#00C853", font=("Segoe UI", 10, "italic"))
 lbl_copiado.pack(side="left", padx=10)
 
+# === Histórico ===
+frame_hist = ttk.LabelFrame(root, text="Histórico de senhas (últimas 10)", padding=10)
+frame_hist.pack(pady=10, padx=20, fill="both", expand=True)
+
+listbox_senhas = tk.Listbox(frame_hist, bg=COR_CAIXA, fg=COR_TEXTO,
+                            font=("Consolas", 10), selectbackground="#333333",
+                            height=7, relief="flat")
+listbox_senhas.pack(fill="both", expand=True, padx=5, pady=5)
+
+btn_limpar = tk.Button(root, text="🗑 Limpar histórico", command=limpar_historico,
+                       bg="#444444", fg=COR_TEXTO, font=("Segoe UI", 9),
+                       activebackground="#555555", relief="flat", cursor="hand2")
+btn_limpar.pack(pady=5)
+
 # === Rodapé ===
 tk.Label(root, text="Feito com ❤️ em Python", font=("Segoe UI", 9),
          bg=COR_FUNDO, fg="#555555").pack(side="bottom", pady=10)
 
+# Atualiza histórico ao iniciar
+atualizar_historico()
+
 root.mainloop()
+
 
 #quem leu e gay
